@@ -1,0 +1,11 @@
+".\Objects\STARTUP.obj",
+".\Objects\main.obj",
+".\Objects\Device.obj",
+".\Objects\smg.obj",
+".\Objects\key.obj",
+".\Objects\uart.obj",
+".\Objects\sonic.obj",
+".\Objects\timer.obj",
+".\Objects\delay.obj" 
+TO ".\Objects\2606736780" 
+PRINT(".\Listings\2606736780.m51") RAMSIZE(256) 

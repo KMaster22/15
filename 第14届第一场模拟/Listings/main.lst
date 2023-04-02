@@ -1,0 +1,240 @@
+C51 COMPILER V9.60.0.0   MAIN                                                              03/27/2023 21:31:23 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: D:\MDK\C51\BIN\C51.EXE User\main.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Libaray\System;.\Libaray\Hardw
+                    -are;.\Libaray\System) DEBUG OBJECTEXTEND PRINT(.\Listings\main.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include "system.h"
+   2          
+   3          
+   4          #define DISTANCE 0 // 显示
+   5          #define PARAM   1  //参数
+   6          u8 display = DISTANCE;
+   7          
+   8          // 超声波的参数
+   9          u16 dis = 30;
+  10          
+  11          
+  12          //系统初始化函数
+  13          void SystemProcess()
+  14          {
+  15   1        DeviceCtrl(0xa0,0x00);//buzz relay
+  16   1        DeviceCtrl(0x80,0xff); //led
+  17   1      }
+  18          
+  19          //字符发送
+  20          void SendByte(u8 dat)
+  21          {
+  22   1        SBUF = dat;
+  23   1        while(!TI);
+  24   1        TI =0;
+  25   1      }
+  26          
+  27          void SendString(char *str)
+  28          {
+  29   1        while(*str != '\0'){
+  30   2          SendByte(*str++);
+  31   2        }
+  32   1        
+  33   1      }
+  34          
+  35          //超声波测距
+  36          u8 sonicnt = 0;
+  37          u16 distance =0;
+  38          
+  39          void SonicProcess()
+  40          {
+  41   1        if(sonicnt >150){
+  42   2          sonicnt = 0;
+  43   2          distance = GetDistance();
+  44   2        
+  45   2          
+  46   2        }
+  47   1      }
+  48          
+  49          //按键获取函数
+  50          
+  51          u8 keycnt =0 ;
+  52          
+  53          void KbdProcess()
+  54          {
+C51 COMPILER V9.60.0.0   MAIN                                                              03/27/2023 21:31:23 PAGE 2   
+
+  55   1        char buf[28];
+  56   1      
+  57   1        if(keycnt>15){
+  58   2          keycnt = 0;
+  59   2          KbdThree();// 15ms 一次调用
+  60   2          if(Trg==0x88){ //s4
+  61   3            display = (display+1)%2;
+  62   3          }
+  63   2          if(Trg==0x48){ //s8
+  64   3            if(display==DISTANCE){
+  65   4              dis = distance;
+  66   4            }
+  67   3          }
+  68   2          if(Trg==0x28){//s12
+  69   3            if(display == PARAM){
+  70   4                dis = dis+10;
+  71   4            }   
+  72   3          }
+  73   2          if(Trg==0x18){//s16
+  74   3            if(display == PARAM){
+  75   4                dis = dis-10;
+  76   4            }   
+  77   3          }
+  78   2          if(Trg==0x44){//s9
+  79   3            sprintf(buf,"\"距离Distance:%d\": cm\r\n",distance); //转义写法
+  80   3            SendString(buf);
+  81   3            memset(buf,'\0',28);
+  82   3          }
+  83   2          
+  84   2        }
+  85   1      }
+  86          
+  87          //数码管缓存函数
+  88          
+  89          u8 tubecnt = 0;
+  90          
+  91          void SmgProcess()
+  92          {
+  93   1        if(tubecnt>1){
+  94   2          tubecnt = 0;
+  95   2          if(display==DISTANCE){
+  96   3            smgbuf[0] = 0x3E;
+  97   3            smgbuf[1] = t_display[1];
+  98   3            smgbuf[2] = t_display[10];
+  99   3            smgbuf[3] = t_display[10];
+ 100   3            smgbuf[4] = t_display[10];
+ 101   3            smgbuf[5] = t_display[distance/100%10];
+ 102   3            smgbuf[6] = t_display[distance/10%10];
+ 103   3            smgbuf[7] = t_display[distance%10];
+ 104   3          }else if(display==PARAM){
+ 105   3            smgbuf[0] = 0x3E;
+ 106   3            smgbuf[1] = t_display[2];
+ 107   3            smgbuf[2] = t_display[10];
+ 108   3            smgbuf[3] = t_display[10];
+ 109   3            smgbuf[4] = t_display[10];
+ 110   3            smgbuf[5] = t_display[dis/100%10];
+ 111   3            smgbuf[6] = t_display[dis/10%10];
+ 112   3            smgbuf[7] = t_display[dis%10];
+ 113   3          }
+ 114   2        }
+ 115   1        
+ 116   1      }
+C51 COMPILER V9.60.0.0   MAIN                                                              03/27/2023 21:31:23 PAGE 3   
+
+ 117          
+ 118          void main()
+ 119          {
+ 120   1        Timer2Init();
+ 121   1        UartInit();
+ 122   1        SystemProcess();
+ 123   1        Timer0Init();
+ 124   1        while(1){
+ 125   2          SmgProcess();
+ 126   2          KbdProcess();
+ 127   2          SonicProcess();
+ 128   2        }
+ 129   1      
+ 130   1        
+ 131   1      }
+ 132          //led
+ 133          u8 ledbit = 0xff;
+ 134          bit ledflag = 0;
+ 135          u16 ledcnt = 0;
+ 136          
+ 137          void LedCtrl()
+ 138          {
+ 139   1        if(display ==DISTANCE){
+ 140   2          ledbit = 0xfe;
+ 141   2        } 
+ 142   1        if(display == PARAM){
+ 143   2          ledbit = 0xfd;
+ 144   2        }
+ 145   1        
+ 146   1        if(distance>dis){
+ 147   2          ledcnt++;
+ 148   2          ledflag =1;
+ 149   2        }else{
+ 150   2          ledflag = 0;
+ 151   2        }
+ 152   1        
+ 153   1        if(ledflag){
+ 154   2          if(ledcnt<=200){
+ 155   3            ledbit &= 0xfb;
+ 156   3          }else if(ledcnt<= 400){
+ 157   3            ledbit |= 0x04;
+ 158   3          }else{
+ 159   3            ledcnt = 0;
+ 160   3          }
+ 161   2        }else{
+ 162   2          ledbit |= 0x04;
+ 163   2        }
+ 164   1        
+ 165   1        DeviceCtrl(0x80,ledbit); //led
+ 166   1        
+ 167   1      }
+ 168          
+ 169          void Timer2Handler() interrupt 12
+ 170          {
+ 171   1        static u8  tube = 0 ;
+ 172   1        tube++;
+ 173   1      
+ 174   1        keycnt++;
+ 175   1        sonicnt++;
+ 176   1        tubecnt++;
+ 177   1        if(tube>=2){
+ 178   2          tube = 0;
+C51 COMPILER V9.60.0.0   MAIN                                                              03/27/2023 21:31:23 PAGE 4   
+
+ 179   2          ScanfSmg();
+ 180   2        }
+ 181   1        LedCtrl();
+ 182   1        
+ 183   1        
+ 184   1      }
+ 185          
+ 186          void UartHandler()interrupt 4
+ 187          {
+ 188   1        char cmd[12]={0};
+ 189   1        char tmp;
+ 190   1        static u8 i =0;
+ 191   1        
+ 192   1        if(RI){
+ 193   2          RI = 0;
+ 194   2          tmp = SBUF;
+ 195   2          if(tmp=='o'){
+ 196   3            i = 0;
+ 197   3          }
+ 198   2          cmd[i++] = tmp;
+ 199   2          if(cmd[1] = 'o' && cmd[3]=='n'){
+ 200   3            SendByte('9');
+ 201   3            memset(cmd, '\0', 12);
+ 202   3          }
+ 203   2          
+ 204   2          if(i==12){i=0;}
+ 205   2          
+ 206   2        }
+ 207   1      
+ 208   1      }
+ 209          
+ 210          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    809    ----
+   CONSTANT SIZE    =     36    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     13      43
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      1    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

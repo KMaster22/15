@@ -1,0 +1,58 @@
+C51 COMPILER V9.60.0.0   KEY                                                               03/27/2023 21:29:15 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE KEY
+OBJECT MODULE PLACED IN .\Objects\key.obj
+COMPILER INVOKED BY: D:\MDK\C51\BIN\C51.EXE Libaray\Hardware\key.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Libaray\System;.\Li
+                    -baray\Hardware;.\Libaray\System) DEBUG OBJECTEXTEND PRINT(.\Listings\key.lst) TABS(2) OBJECT(.\Objects\key.obj)
+
+line level    source
+
+   1          #include "key.h"
+   2          
+   3          
+   4          u8 GetKeyState()
+   5          {
+   6   1        u8 io = 0xff;
+   7   1        
+   8   1        P3 = 0xf0;P4=0xff;
+   9   1        if(P44==0){io = 0x70;}
+  10   1        if(P42==0){io = 0xb0;}
+  11   1        if(P35==0){io = 0xd0;}
+  12   1        if(P34==0){io = 0xe0;}
+  13   1        P3 = 0x0f;P4=0x00;
+  14   1        if(P33==0){io |= 0x07;}
+  15   1        if(P32==0){io |= 0x0b;}
+  16   1        if(P31==0){io |= 0x0d;}
+  17   1        if(P30==0){io |= 0x0e;}
+  18   1        
+  19   1        return io;
+  20   1        
+  21   1      }
+  22          
+  23          u8 Trg;
+  24          u8 Cont;
+  25          
+  26          void KbdThree()
+  27          {
+  28   1        u8 readdata = 0xff^GetKeyState();
+  29   1        Trg = readdata&(readdata^Cont);
+  30   1        Cont = readdata;
+  31   1        
+  32   1      }
+  33          
+  34          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     73    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      2    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
